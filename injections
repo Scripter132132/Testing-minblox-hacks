@@ -1,0 +1,42 @@
+// FLY MODULE
+let flySpeed, verticalSpeed, bypassGravity;
+
+const fly = new Module("Fly", function(enabled) {
+	if (enabled) {
+		let ticks = 0;
+		player.gravity = 0; // Disable gravity if supported
+
+		tickLoop["Fly"] = function() {
+			ticks++;
+			const dir = getMoveDirection(flySpeed[1]);
+
+			// Apply horizontal motion
+			player.motion.x = dir.x;
+			player.motion.z = dir.z;
+
+			// Apply vertical motion
+			if (keyPressedDump("space")) {
+				player.motion.y = verticalSpeed[1];
+			} else if (keyPressedDump("shift")) {
+				player.motion.y = -verticalSpeed[1];
+			} else {
+				player.motion.y = 0;
+			}
+
+			// Optional: anti-fall or spoof if needed
+			if (bypassGravity[1]) {
+				player.fallDistance = 0;
+			}
+		};
+	} else {
+		// Disable fly
+		delete tickLoop["Fly"];
+		player.gravity = 9.8; // Restore default gravity
+		player.motion.y = 0;
+	}
+});
+
+// Module options
+flySpeed = fly.addoption("Speed", Number, 2.5);
+verticalSpeed = fly.addoption("Vertical", Number, 1.0);
+bypassGravity = fly.addoption("BypassGravity", Boolean, true);
