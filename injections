@@ -1,42 +1,54 @@
-// FLY MODULE
-let flySpeed, verticalSpeed, bypassGravity;
+// === Fly Module === //
+let flyvalue, flyvert, flybypass;
 
-const fly = new Module("Fly", function(enabled) {
-	if (enabled) {
+// Create the Fly module
+const fly = new Module("Fly", function(callback) {
+	if (callback) {
 		let ticks = 0;
-		player.gravity = 0; // Disable gravity if supported
 
+		// Activate Fly loop
 		tickLoop["Fly"] = function() {
 			ticks++;
-			const dir = getMoveDirection(flySpeed[1]);
 
-			// Apply horizontal motion
+			// Get movement direction
+			const dir = getMoveDirection(flyvalue[1]);
+
+			// Apply movement
 			player.motion.x = dir.x;
 			player.motion.z = dir.z;
-
-			// Apply vertical motion
-			if (keyPressedDump("space")) {
-				player.motion.y = verticalSpeed[1];
-			} else if (keyPressedDump("shift")) {
-				player.motion.y = -verticalSpeed[1];
-			} else {
-				player.motion.y = 0;
-			}
-
-			// Optional: anti-fall or spoof if needed
-			if (bypassGravity[1]) {
-				player.fallDistance = 0;
-			}
+			player.motion.y = keyPressedDump("space")
+				? flyvert[1]
+				: (keyPressedDump("shift") ? -flyvert[1] : 0);
 		};
 	} else {
-		// Disable fly
+		// Disable Fly loop
 		delete tickLoop["Fly"];
-		player.gravity = 9.8; // Restore default gravity
-		player.motion.y = 0;
+
+		// Restore motion limits
+		if (player) {
+			player.motion.x = Math.max(Math.min(player.motion.x, 0.3), -0.3);
+			player.motion.z = Math.max(Math.min(player.motion.z, 0.3), -0.3);
+		}
 	}
 });
 
-// Module options
-flySpeed = fly.addoption("Speed", Number, 2.5);
-verticalSpeed = fly.addoption("Vertical", Number, 1.0);
-bypassGravity = fly.addoption("BypassGravity", Boolean, true);
+// === Fly Options === //
+flybypass = fly.addoption("Bypass", Boolean, true);     // Prevent anticheat detection
+flyvalue = fly.addoption("Speed", Number, 2);           // Horizontal speed
+flyvert = fly.addoption("Vertical", Number, 0.7);       // Vertical lift/fall speed
+
+// === Enable Tracking === //
+fly.enabled = false; // Manual tracking of enabled state
+
+// === Keybind to Toggle Fly === //
+document.addEventListener("keydown", function (e) {
+	if (e.key.toLowerCase() === "f") {
+		fly.enabled = !fly.enabled;                 // Toggle on/off
+		fly.callback(fly.enabled);                  // Apply changes
+		if (typeof showNotification === "function") {
+			showNotification(`Fly ${fly.enabled ? "enabled" : "disabled"}`, "info");
+		} else {
+			console.log(`Fly ${fly.enabled ? "enabled" : "disabled"}`);
+		}
+	}
+});
